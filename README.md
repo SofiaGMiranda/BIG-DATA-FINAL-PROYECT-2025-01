@@ -1,5 +1,19 @@
 # BIG-DATA-FINAL-PROYECT-2025-01
 -3-
+Healthcare Data Intelligence 
+Overview
+
+This project focuses on building a data intelligence pipeline for the healthcare domain. The objective is to transform a raw dataset into a structured and normalized format that supports clustering, recommendation, and graph-based analysis.
+
+The system includes data ingestion, preprocessing, schema design, and the creation of relational tables to enable advanced analytical tasks.
+
+Problem Statement
+
+Healthcare datasets are often unstructured and difficult to analyze. This project addresses the need for a clean and normalized data model that enables pattern discovery across patient profiles, medical conditions, treatments, and hospital outcomes.
+
+Product Question
+
+Is it possible to cluster patient profiles and treatment pathways to identify patterns between medical conditions, medication types, and hospital admission outcomes?
 #### Data Dictionary Draft
 
 | Column Name        | Description                                       | Data Type   |
