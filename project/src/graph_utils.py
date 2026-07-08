@@ -11,10 +11,21 @@ LABEL_MAPS = {
                           3:'Paracetamol',4:'Penicillin'},
 }
 
-CONDITION_PATH = '../data/interim/healtcare_processedv2.csv'
-CLUSTERS_PATH  = '../data/processed/healthcare_pca_clusters.csv'
+from pathlib import Path
 
+BASE_DIR = Path(__file__).resolve().parent
 
+CONDITION_PATH = BASE_DIR.parent / "data" / "interim" / "healtcare_processedv2.csv"
+CLUSTERS_PATH = BASE_DIR.parent / "data" / "processed" / "healthcare_pca_clusters.csv"
+
+st.write("BASE_DIR:", BASE_DIR)
+st.write("CONDITION_PATH:", CONDITION_PATH)
+st.write("Existe CONDITION:", CONDITION_PATH.exists())
+
+st.write("CLUSTERS_PATH:", CLUSTERS_PATH)
+st.write("Existe CLUSTERS:", CLUSTERS_PATH.exists())
+
+df = pd.read_csv(CONDITION_PATH)
 @st.cache_data
 def load_clinical_data():
     """Carga y prepara los datos clínicos (mismos CSVs que Priorización)."""
@@ -81,6 +92,7 @@ def build_graph(df, edge_stats, lift_threshold, weight_threshold):
             n_patients=int(row['n_patients']), prop_abnormal=row['prop_abnormal'],
         )
     return G
+
 
 
 def plot_graph_plotly(G):
