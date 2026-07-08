@@ -18,12 +18,13 @@ BASE_DIR = Path(__file__).resolve().parent
 CONDITION_PATH = BASE_DIR.parent / "data" / "interim" / "healtcare_processedv2.csv"
 CLUSTERS_PATH = BASE_DIR.parent / "data" / "processed" / "healthcare_pca_clusters.csv"
 
-st.write("BASE_DIR:", BASE_DIR)
-st.write("CONDITION_PATH:", CONDITION_PATH)
-st.write("Existe CONDITION:", CONDITION_PATH.exists())
+#st.write("BASE_DIR:", BASE_DIR)
+#st.write("CONDITION_PATH:", CONDITION_PATH)
+#st.write("Existe CONDITION:", CONDITION_PATH.exists())
 
-st.write("CLUSTERS_PATH:", CLUSTERS_PATH)
-st.write("Existe CLUSTERS:", CLUSTERS_PATH.exists())
+#st.write("CLUSTERS_PATH:", CLUSTERS_PATH)
+
+#st.write("Existe CLUSTERS:", CLUSTERS_PATH.exists())
 
 df = pd.read_csv(CONDITION_PATH)
 @st.cache_data
