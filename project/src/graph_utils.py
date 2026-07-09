@@ -20,16 +20,16 @@ CLUSTERS_PATH = BASE_DIR.parent / "data" / "processed" / "healthcare_pca_cluster
 
 #st.write("BASE_DIR:", BASE_DIR)
 #st.write("CONDITION_PATH:", CONDITION_PATH)
-#st.write("Existe CONDITION:", CONDITION_PATH.exists())
+#st.write("Exists CONDITION:", CONDITION_PATH.exists())
 
 #st.write("CLUSTERS_PATH:", CLUSTERS_PATH)
 
-#st.write("Existe CLUSTERS:", CLUSTERS_PATH.exists())
+#st.write("Exists CLUSTERS:", CLUSTERS_PATH.exists())
 
 df = pd.read_csv(CONDITION_PATH)
 @st.cache_data
 def load_clinical_data():
-    """Carga y prepara los datos clínicos (mismos CSVs que Priorización)."""
+    """Loads and prepares the clinical data (same CSVs as Prioritization)."""
     df = pd.read_csv(CONDITION_PATH)
     clusters = pd.read_csv(CLUSTERS_PATH)
 
@@ -48,7 +48,7 @@ def load_clinical_data():
 
 @st.cache_data
 def compute_edge_stats(df):
-    """Calcula weight y lift por cada par (condición, medicación)."""
+    """Computes weight and lift for each (condition, medication) pair."""
     edge_stats = df.groupby(['condition_label', 'medication_label']).agg(
         n_patients=('Test Results', 'count'),
         n_abnormal=('Test Results', lambda x: (x == 2).sum()),
@@ -71,7 +71,7 @@ def compute_edge_stats(df):
 
 
 def build_graph(df, edge_stats, lift_threshold, weight_threshold):
-    """Construye el grafo aplicando ambos filtros: lift (significancia) y weight (intensidad)."""
+    """Builds the graph applying both filters: lift (significance) and weight (intensity)."""
     conditions = df['condition_label'].unique().tolist()
     medications = df['medication_label'].unique().tolist()
 
@@ -98,14 +98,14 @@ def build_graph(df, edge_stats, lift_threshold, weight_threshold):
 
 def plot_graph_plotly(G):
     """
-    Dibuja el grafo Condición ↔ Medicamento con Plotly.
-    Los nodos aislados aparecen en rojo.
+    Draws the Condition ↔ Medication graph with Plotly.
+    Isolated nodes appear in red.
     """
 
     isolated = set(nx.isolates(G))
 
     # -------------------------
-    # Posiciones
+    # Positions
     # -------------------------
     pos = {}
 
@@ -128,7 +128,7 @@ def plot_graph_plotly(G):
         pos[m] = (6, i * spacing)
 
     # -------------------------
-    # Aristas
+    # Edges
     # -------------------------
     edge_x = []
     edge_y = []
@@ -153,7 +153,7 @@ def plot_graph_plotly(G):
     )
 
     # -------------------------
-    # Nodos
+    # Nodes
     # -------------------------
     node_x = []
     node_y = []
@@ -180,16 +180,16 @@ def plot_graph_plotly(G):
             node_color.append("#1D9E75")
 
         tipo = (
-            "Condición"
+            "Condition"
             if d["node_type"] == "condition"
-            else "Medicamento"
+            else "Medication"
         )
 
         hover_text.append(
             f"<b>{n}</b><br>"
-            f"Tipo: {tipo}<br>"
-            f"Conexiones: {grado}"
-            f"{'<br><b>Nodo aislado</b>' if n in isolated else ''}"
+            f"Type: {tipo}<br>"
+            f"Connections: {grado}"
+            f"{'<br><b>Isolated node</b>' if n in isolated else ''}"
         )
 
     node_trace = go.Scatter(
@@ -209,7 +209,7 @@ def plot_graph_plotly(G):
     )
 
     # -------------------------
-    # Etiquetas
+    # Labels
     # -------------------------
     label_x = []
     label_y = []
@@ -242,7 +242,7 @@ def plot_graph_plotly(G):
     )
 
     # -------------------------
-    # Figura
+    # Figure
     # -------------------------
     fig = go.Figure(
         data=[
@@ -284,35 +284,35 @@ def plot_graph_plotly(G):
     )
 
     # -------------------------
-    # Títulos de columnas
+    # Column titles
     # -------------------------
     ymax = max(node_y) + spacing
 
     fig.add_annotation(
         x=0,
         y=ymax,
-        text="<b>Condiciones</b>",
+        text="<b>Conditions</b>",
         showarrow=False,
-        font=dict(size=18)
+        font=dict(size=18, color="#185FA5")
     )
 
     fig.add_annotation(
         x=6,
         y=ymax,
-        text="<b>Medicamentos</b>",
+        text="<b>Medications</b>",
         showarrow=False,
-        font=dict(size=18)
+        font=dict(size=18, color="#1D9E75")
     )
 
     return fig, isolated
 
 def run_graph_section():
-    """Sección completa de la pestaña 'Grafo Clínico' para app.py"""
-    st.subheader("Grafo Clínico — Condición ↔ Medicación")
+    """Complete 'Clinical Graph' tab section for app.py"""
+    st.subheader("Clinical Graph — Condition ↔ Medication")
     st.caption(
-        "Las aristas representan asociaciones estadísticamente significativas "
-        "(lift), no simple co-ocurrencia. Ajusta los umbrales para explorar "
-        "qué tan robusta es la centralidad de cada nodo."
+        "Edges represent statistically significant associations "
+        "(lift), not simple co-occurrence. Adjust the thresholds to explore "
+        "how robust each node's centrality is."
     )
 
     df = load_clinical_data()
@@ -321,39 +321,39 @@ def run_graph_section():
     col1, col2 = st.columns(2)
     with col1:
         lift_thr = st.slider(
-            "Umbral de significancia (lift)",
+            "Significance threshold (lift)",
             min_value=float(edge_stats['lift'].min()),
             max_value=float(edge_stats['lift'].max()),
             value=1.05, step=0.01,
-            help="lift >= 1 significa que la asociación ocurre más de lo esperado por azar."
+            help="lift >= 1 means the association occurs more often than expected by chance."
         )
     with col2:
         weight_thr = st.slider(
-            "Umbral de intensidad (weight)",
+            "Intensity threshold (weight)",
             min_value=float(edge_stats['weight'].min()),
             max_value=float(edge_stats['weight'].max()),
             value=float(edge_stats['weight'].min()), step=1.0,
-            help="Filtra por volumen de pacientes ponderado por severidad."
+            help="Filters by patient volume weighted by severity."
         )
 
     G = build_graph(df, edge_stats, lift_thr, weight_thr)
     fig, isolated = plot_graph_plotly(G)
 
     c1, c2, c3 = st.columns(3)
-    c1.metric("Aristas activas", G.number_of_edges())
-    c2.metric("Densidad", f"{nx.density(G):.3f}")
-    c3.metric("Nodos aislados", len(isolated))
+    c1.metric("Active Edges", G.number_of_edges())
+    c2.metric("Density", f"{nx.density(G):.3f}")
+    c3.metric("Isolated Nodes", len(isolated))
 
     st.plotly_chart(fig, width='stretch')
 
     if isolated:
         st.warning(
-            f"⚠️ Con estos umbrales, **{', '.join(sorted(isolated))}** "
-            f"queda(n) desconectado(s) — su(s) conexión(es) son estadísticamente "
-            f"válidas pero de menor intensidad que el resto de la red."
+            f"⚠️ With these thresholds, **{', '.join(sorted(isolated))}** "
+            f"become(s) disconnected — its/their connection(s) are statistically "
+            f"valid but of lower intensity than the rest of the network."
         )
 
-    with st.expander("Ver métricas de centralidad"):
+    with st.expander("View centrality metrics"):
         if nx.is_connected(G) and G.number_of_edges() > 0:
             G_dist = G.copy()
             for u, v, d in G_dist.edges(data=True):
@@ -366,4 +366,4 @@ def run_graph_section():
             }).sort_values('pagerank', ascending=False)
             st.dataframe(metrics_df.round(4), width='stretch')
         else:
-            st.info("El grafo no está conectado con estos umbrales — algunas métricas no son comparables.")
+            st.info("The graph is not connected with these thresholds — some metrics are not comparable.")

@@ -111,7 +111,7 @@ def kmeans_clustering_section(pca_result, patient_feature_matrix):
     st.divider()
 
     k_selected = st.slider("Selecciona el número de clusters (K):", min_value=2, max_value=10,
-                            value=int(best_row['k']), key="kmeans_k_slider")
+                            value=4, key="kmeans_k_slider")
 
     km_model = KMeans(n_clusters=k_selected, random_state=42, n_init=10)
     labels = km_model.fit_predict(pca_array)
