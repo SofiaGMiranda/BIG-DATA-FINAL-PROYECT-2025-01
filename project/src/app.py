@@ -1,10 +1,12 @@
 import streamlit as st
 import pandas as pd
+from pathlib import Path
 from sklearn.cluster import KMeans
 from data_utils import process_data
 from charts import plot_categorical, plot_numerical
 from modeling_utils import run_care_prioritization_section
 from graph_utils import run_graph_section
+
 from pca_utils import (
     build_patient_feature_matrix,
     run_pca,
@@ -21,12 +23,17 @@ from clustering_utils import (
     show_failure_analysis,
 )
 
-st.set_page_config(page_title="Healthcare Audit", layout="wide", page_icon="📊")
+st.set_page_config(page_title="Clinical analysis", layout="wide", page_icon="💉​")
 
-st.title("Auditoría y Exploración de Datos")
-st.caption("Dashboard de calidad de datos y análisis exploratorio — dataset de salud")
+st.title("🏥 Clinical Analytics System — Patient Prioritization & Segmentation")
+st.caption("Healthcare data pipeline: data quality, PCA, clustering, clinical prioritization model, and condition-medication association graph")
 
-uploaded_file = st.sidebar.file_uploader("Subir CSV", type=["csv"])
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+RAW_DATA = BASE_DIR / "data" / "raw" / "healthcare_dataset.csv"
+
+#uploaded_file = st.sidebar.file_uploader("Upload CSV", type=["csv"])
 
 NEW_FEATURES = ["Length of Stay", "Admission Day of Week", "Admission Month", "Admission Year"]
 
@@ -36,69 +43,73 @@ def contar_outliers_iqr(serie):
     lim_inf, lim_sup = q1 - 1.5 * iqr, q3 + 1.5 * iqr
     return ((serie < lim_inf) | (serie > lim_sup)).sum()
 
-if uploaded_file:
-    raw_len = pd.read_csv(uploaded_file).shape[0]
-    uploaded_file.seek(0)
+#if uploaded_file:
+#raw_len = pd.read_csv(uploaded_file).shape[0]
+#uploaded_file.seek(0)
 
-    df = process_data(uploaded_file)
+#df = process_data(uploaded_file)
 
-    cat_cols = df.select_dtypes(include=["object", "str"]).columns.tolist()
-    num_cols = df.select_dtypes(include=["int64", "float64"]).columns.tolist()
-    cat_cols_plot = [c for c in cat_cols if c not in ["Name", "Doctor", "Hospital"]]
+raw_len = pd.read_csv(RAW_DATA).shape[0]
 
-    total_nulos = df.isnull().sum().sum()
-    total_duplicados = raw_len - len(df)
-    total_outliers = sum(contar_outliers_iqr(df[c]) for c in num_cols)
+df = process_data(RAW_DATA)
 
-    # ---- Navegación manual ----
-    if "active_tab" not in st.session_state:
-        st.session_state.active_tab = "🔍 Diagnóstico"
+cat_cols = df.select_dtypes(include=["object", "str"]).columns.tolist()
+num_cols = df.select_dtypes(include=["int64", "float64"]).columns.tolist()
+cat_cols_plot = [c for c in cat_cols if c not in ["Name", "Doctor", "Hospital"]]
 
-    st.session_state.active_tab = st.radio(
-        "Navegación",
-        ["🔍 Diagnóstico", "📈 EDA", "🧬 PCA", "🧩 Clustering", "🎯 Priorización","🕸️ Grafo"],
+total_nulos = df.isnull().sum().sum()
+total_duplicados = raw_len - len(df)
+total_outliers = sum(contar_outliers_iqr(df[c]) for c in num_cols)
+
+    # ---- Manual navigation ----
+if "active_tab" not in st.session_state:
+    st.session_state.active_tab = "🔍 Diagnostics"
+
+st.session_state.active_tab = st.radio(
+        "Navigation",
+        ["🔍 Diagnostics", "📈 EDA", "🧬 PCA", "🧩 Clustering", "🎯 Prioritization","🕸️ Graph"],
         horizontal=True,
         label_visibility="collapsed",
-        index=["🔍 Diagnóstico", "📈 EDA", "🧬 PCA", "🧩 Clustering", "🎯 Priorización","🕸️ Grafo"].index(st.session_state.active_tab),
+        index=["🔍 Diagnostics", "📈 EDA", "🧬 PCA", "🧩 Clustering", "🎯 Prioritization","🕸️ Graph"].index(st.session_state.active_tab),
     )
+
+st.divider()
+
+if st.session_state.active_tab == "🔍 Diagnostics":
+    st.subheader("Dataset Summary")
+
+    c1, c2, c3, c4, c5 = st.columns(5)
+    c1.metric("Total Rows", f"{len(df):,}")
+    c2.metric("Duplicates Removed", f"{total_duplicados:,}")
+    c3.metric("Null Values", f"{total_nulos:,}")
+    c4.metric("Outliers (IQR)", f"{total_outliers:,}")
+    c5.metric("Total Columns", f"{df.shape[1]}")
+
+    c6, c7 = st.columns(2)
+    c6.metric("Categorical Variables", len(cat_cols))
+    c7.metric("Numerical Variables", len(num_cols))
 
     st.divider()
 
-    if st.session_state.active_tab == "🔍 Diagnóstico":
-        st.subheader("Resumen del dataset")
+    col_left, col_right = st.columns([2, 1])
 
-        c1, c2, c3, c4, c5 = st.columns(5)
-        c1.metric("Filas totales", f"{len(df):,}")
-        c2.metric("Duplicados eliminados", f"{total_duplicados:,}")
-        c3.metric("Valores nulos", f"{total_nulos:,}")
-        c4.metric("Outliers (IQR)", f"{total_outliers:,}")
-        c5.metric("Columnas totales", f"{df.shape[1]}")
+    with col_left:
+        st.markdown("##### Preview (first 10 rows)")
+        st.dataframe(df.head(10), width='stretch')
 
-        c6, c7 = st.columns(2)
-        c6.metric("Variables categóricas", len(cat_cols))
-        c7.metric("Variables numéricas", len(num_cols))
-
-        st.divider()
-
-        col_left, col_right = st.columns([2, 1])
-
-        with col_left:
-            st.markdown("##### Vista previa (primeras 10 filas)")
-            st.dataframe(df.head(10), width='stretch')
-
-        with col_right:
-            st.markdown("##### Nulos por columna")
-            nulos_col = df.isnull().sum()
-            nulos_col = nulos_col[nulos_col > 0].sort_values(ascending=False)
-            if len(nulos_col):
-                st.dataframe(nulos_col.rename("Nulos"), width='stretch')
-            else:
-                st.success("Sin valores nulos ✅")
+    with col_right:
+        st.markdown("##### Nulls per Column")
+        nulos_col = df.isnull().sum()
+        nulos_col = nulos_col[nulos_col > 0].sort_values(ascending=False)
+        if len(nulos_col):
+            st.dataframe(nulos_col.rename("Nulls"), width='stretch')
+        else:
+            st.success("No null values ✅")
 
         st.divider()
 
-        st.markdown("##### Nuevas variables generadas")
-        st.caption("Creadas automáticamente durante el procesamiento del dataset")
+        st.markdown("##### Newly Generated Variables")
+        st.caption("Automatically created during dataset processing")
         cols_new = st.columns(len(NEW_FEATURES))
         for i, feat in enumerate(NEW_FEATURES):
             with cols_new[i]:
@@ -106,77 +117,77 @@ if uploaded_file:
                     st.markdown(f"**{feat}**")
                     st.caption(str(df[feat].dtype))
 
-        with st.expander("Ver muestra de las nuevas variables"):
+        with st.expander("View sample of the new variables"):
             st.dataframe(df[NEW_FEATURES].head(10), width='stretch')
 
-    elif st.session_state.active_tab == "📈 EDA":
-        st.subheader("Exploración de variables")
+elif st.session_state.active_tab == "📈 EDA":
+    st.subheader("Variable Exploration")
 
-        st.markdown("### Variable categórica")
-        sel_cat = st.selectbox("Categoría:", cat_cols_plot)
-        plot_categorical(df, sel_cat)
+    st.markdown("### Categorical Variable")
+    sel_cat = st.selectbox("Category:", cat_cols_plot)
+    plot_categorical(df, sel_cat)
 
-        st.divider()
+    st.divider()
 
-        st.markdown("### Variable numérica")
-        sel_num = st.selectbox("Numérico:", num_cols)
-        plot_numerical(df, sel_num)
+    st.markdown("### Numerical Variable")
+    sel_num = st.selectbox("Numeric:", num_cols)
+    plot_numerical(df, sel_num)
 
-    elif st.session_state.active_tab == "🧬 PCA":
-        st.subheader("Reducción de dimensionalidad — PCA")
+elif st.session_state.active_tab == "🧬 PCA":
+    st.subheader("Dimensionality Reduction — PCA")
 
-        with st.spinner("Construyendo matriz de características por paciente..."):
-            patient_feature_matrix = build_patient_feature_matrix(df)
-            pca_result = run_pca(patient_feature_matrix)
+    with st.spinner("Building per-patient feature matrix..."):
+        patient_feature_matrix = build_patient_feature_matrix(df)
+        pca_result = run_pca(patient_feature_matrix)
 
-        st.markdown("### Varianza explicada")
-        plot_variance_explained(pca_result)
+    st.markdown("### Explained Variance")
+    plot_variance_explained(pca_result)
 
-        st.divider()
+    st.divider()
 
-        show_components_table(pca_result)
+    show_components_table(pca_result)
 
-        st.divider()
+    st.divider()
 
-        st.markdown("### Proyección de pacientes (PC1 vs PC2)")
-        plot_pca_scatter(pca_result, patient_feature_matrix)
+    st.markdown("### Patient Projection (PC1 vs PC2)")
+    plot_pca_scatter(pca_result, patient_feature_matrix)
 
-        st.divider()
+    st.divider()
 
-        show_full_matrix(patient_feature_matrix)
+    show_full_matrix(patient_feature_matrix)
     
-    elif st.session_state.active_tab == "🧩 Clustering":
-        st.subheader("Segmentación de pacientes — Clustering")
+elif st.session_state.active_tab == "🧩 Clustering":
+    st.subheader("Patient Segmentation — Clustering")
 
-        with st.spinner("Construyendo matriz de características y PCA..."):
-            patient_feature_matrix = build_patient_feature_matrix(df)
-            pca_result = run_pca(patient_feature_matrix)
+    with st.spinner("Building feature matrix and PCA..."):
+        patient_feature_matrix = build_patient_feature_matrix(df)
+        pca_result = run_pca(patient_feature_matrix)
 
-        st.markdown("### K-Means")
-        kmeans_labels, kmeans_model = kmeans_clustering_section(pca_result, patient_feature_matrix)
+    st.markdown("### K-Means")
+    kmeans_labels, kmeans_model = kmeans_clustering_section(pca_result, patient_feature_matrix)
 
-        st.divider()
+    st.divider()
 
-        st.markdown("### DBSCAN")
-        dbscan_labels, dbscan_model = dbscan_clustering_section(pca_result, patient_feature_matrix)
+    st.markdown("### DBSCAN")
+    dbscan_labels, dbscan_model = dbscan_clustering_section(pca_result, patient_feature_matrix)
 
-        st.divider()
+    st.divider()
 
-        st.markdown("### Validación — K-Means vs DBSCAN")
-        show_validation_table(pca_result, kmeans_labels, dbscan_labels)
+    st.markdown("### Validation — K-Means vs DBSCAN")
+    show_validation_table(pca_result, kmeans_labels, dbscan_labels)
 
-        st.divider()
+    st.divider()
 
-        st.markdown("### Análisis de fallas y anomalías")
-        show_failure_analysis(pca_result, patient_feature_matrix, kmeans_labels, dbscan_labels)
+    st.markdown("### Failure and Anomaly Analysis")
+    show_failure_analysis(pca_result, patient_feature_matrix, kmeans_labels, dbscan_labels)
     
-    elif st.session_state.active_tab == "🎯 Priorización":
-        st.subheader("Motor de Priorización Clínica")
-        run_care_prioritization_section()
+elif st.session_state.active_tab == "🎯 Prioritization":
+    st.subheader("Clinical Prioritization Engine")
+    run_care_prioritization_section()
 
-    elif st.session_state.active_tab == "🕸️ Grafo":
-        st.subheader("Análisis de Redes de Relaciones")
-        run_graph_section()
+elif st.session_state.active_tab == "🕸️ Graph":
+    st.subheader("Relationship Network Analysis")
+    run_graph_section()
 
-else:
-    st.info("⬅️ Sube un archivo CSV desde la barra lateral para comenzar la auditoría.")
+#else:
+    #st.info("⬅️ Upload a CSV file from the sidebar to start the audit.")

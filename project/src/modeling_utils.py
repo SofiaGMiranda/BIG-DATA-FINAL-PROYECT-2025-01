@@ -1,21 +1,21 @@
 """
 modeling_utils.py
 ==================
-Motor de Priorización Clínica — sección de Streamlit para el dashboard
-"Auditoría y Exploración de Datos".
+Clinical Prioritization Engine — Streamlit section for the
+"Data Audit & Exploration" dashboard.
 
-A diferencia de las demás pestañas (que reciben el df ya cargado por la
-barra lateral y calculan PCA/K-Means en vivo), esta pestaña replica la
-Sección 1 del notebook original "Week 10": carga DOS archivos propios
-y los une por índice:
+Unlike the other tabs (which receive the df already loaded from the
+sidebar and compute PCA/K-Means live), this tab replicates Section 1
+of the original "Week 10" notebook: it loads TWO of its own files
+and joins them by index:
 
-    df          <- healtcare_processedv2.csv   (dataset ya limpio, todo codificado como enteros)
-    clusters_df <- healthcare_pca_clusters.csv (mismo dataset + columna 'cluster', con NaN
-                                                 para las filas que no entraron al clustering)
+    df          <- healtcare_processedv2.csv   (already-cleaned dataset, everything encoded as integers)
+    clusters_df <- healthcare_pca_clusters.csv (same dataset + 'cluster' column, with NaN
+                                                 for rows that didn't make it into clustering)
 
-Uso desde app.py:
+Usage from app.py:
     from modeling_utils import run_care_prioritization_section
-    run_care_prioritization_section()   # sin argumentos: maneja su propia carga de archivos
+    run_care_prioritization_section()   # no arguments: handles its own file loading
 """
 
 import numpy as np
@@ -23,6 +23,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import streamlit as st
+from pathlib import Path
+
 
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression
@@ -31,6 +33,17 @@ from sklearn.dummy import DummyClassifier
 from sklearn.metrics import classification_report, confusion_matrix, accuracy_score, f1_score
 
 from catboost import CatBoostClassifier
+
+
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+INTERIM_FILE = BASE_DIR / "data" / "interim" / "healtcare_processedv2.csv"
+CLUSTERS_FILE = BASE_DIR / "data" / "processed" / "healthcare_pca_clusters.csv"
+
+
+df = pd.read_csv(INTERIM_FILE)
+clusters_df = pd.read_csv(CLUSTERS_FILE)
 
 plt.rcParams.update({
     'figure.facecolor': 'none',
@@ -49,7 +62,7 @@ RANDOM_STATE = 42
 np.random.seed(RANDOM_STATE)
 
 # ─────────────────────────────────────────────────────────────
-# Esquema de datos (todo codificado como enteros, igual que el notebook)
+# Data schema (everything encoded as integers, same as the notebook)
 # ─────────────────────────────────────────────────────────────
 
 TARGET = "Test Results"
@@ -66,7 +79,7 @@ LABEL_ENCODING_MAPS = {
     "Admission Month": {0: "April", 1: "August", 2: "December", 3: "February", 4: "January", 5: "July", 6: "June", 7: "March", 8: "May", 9: "November", 10: "October", 11: "September"},
 }
 
-ABNORMAL_CODE = 2  # 'Abnormal' en Test Results
+ABNORMAL_CODE = 2  # 'Abnormal' in Test Results
 
 FEATURES = [
     "Age", "Gender", "Blood Type", "Medical Condition",
@@ -75,7 +88,7 @@ FEATURES = [
     "Admission Month", "Admission Year", "Cluster_Biz", "Cost_Per_Day",
 ]
 
-# Columnas categóricas (CatBoost las recibe nativamente, sin one-hot)
+# Categorical columns (CatBoost receives them natively, without one-hot)
 CATEGORICAL_FEATURES = [
     "Gender", "Blood Type", "Medical Condition", "Insurance Provider",
     "Admission Type", "Medication", "Admission Day of Week", "Admission Month",
@@ -86,16 +99,17 @@ MODEL_OPTIONS = ["Baseline", "Logistic Regression", "Random Forest", "CatBoost",
 
 
 # ─────────────────────────────────────────────────────────────
-# 1. Carga y alineación de datos (replica la Sección 1 del notebook)
+# 1. Data loading and alignment (replicates Section 1 of the notebook)
 # ─────────────────────────────────────────────────────────────
 
-def load_and_merge_datasets(df_file, clusters_file) -> tuple[pd.DataFrame, dict]:
-    """Carga healtcare_processedv2.csv y healthcare_pca_clusters.csv,
-    filtra a las filas con cluster asignado (no-NaN) y las une por
-    índice, igual que en el notebook original. Agrega Cost_Per_Day.
+def load_and_merge_datasets() -> tuple[pd.DataFrame, dict]:
     """
-    df = pd.read_csv(df_file)
-    clusters_df = pd.read_csv(clusters_file)
+    Automatically loads the repository's CSVs,
+    aligns them by index, and adds Cost_Per_Day.
+    """
+
+    df = pd.read_csv(INTERIM_FILE)
+    clusters_df = pd.read_csv(CLUSTERS_FILE)
 
     clusters_df = clusters_df.dropna(subset=["cluster"])
     clusters_df["Cluster_Biz"] = clusters_df["cluster"].astype(int)
@@ -103,18 +117,27 @@ def load_and_merge_datasets(df_file, clusters_file) -> tuple[pd.DataFrame, dict]
     df_aligned = df.loc[clusters_df.index].copy()
     df_aligned["Cluster_Biz"] = clusters_df["Cluster_Biz"].values
 
-    df_aligned["Cost_Per_Day"] = df_aligned["Billing Amount"] / df_aligned["Length of Stay"].replace(0, np.nan)
+    df_aligned["Cost_Per_Day"] = (
+        df_aligned["Billing Amount"] /
+        df_aligned["Length of Stay"].replace(0, np.nan)
+    )
 
     meta = {
         "n_total_rows": len(df),
         "n_with_cluster": len(df_aligned),
-        "cluster_counts": clusters_df["Cluster_Biz"].value_counts().sort_index().to_dict(),
+        "cluster_counts": (
+            clusters_df["Cluster_Biz"]
+            .value_counts()
+            .sort_index()
+            .to_dict()
+        ),
     }
+
     return df_aligned, meta
 
 
 # ─────────────────────────────────────────────────────────────
-# 2. Split temporal + escalado
+# 2. Temporal split + scaling
 # ─────────────────────────────────────────────────────────────
 
 def temporal_split(df: pd.DataFrame, features: list, target_col: str, year_col="Admission Year", min_test_rows=20):
@@ -144,9 +167,9 @@ def temporal_split(df: pd.DataFrame, features: list, target_col: str, year_col="
 
 
 def scale_features(X_train: pd.DataFrame, X_test: pd.DataFrame):
-    """StandardScaler sobre TODAS las features (igual que el notebook
-    original: como ya vienen codificadas como enteros, se escalan
-    directamente sin one-hot)."""
+    """StandardScaler over ALL features (same as the original notebook:
+    since they already come encoded as integers, they are scaled
+    directly without one-hot)."""
     scaler = StandardScaler()
     X_train_sc = scaler.fit_transform(X_train)
     X_test_sc = scaler.transform(X_test)
@@ -154,7 +177,7 @@ def scale_features(X_train: pd.DataFrame, X_test: pd.DataFrame):
 
 
 # ─────────────────────────────────────────────────────────────
-# 3. Métricas
+# 3. Metrics
 # ─────────────────────────────────────────────────────────────
 
 def asymmetric_cost(y_true, y_pred, fn_cost=3, fp_cost=1) -> float:
@@ -189,7 +212,7 @@ def precision_at_k(ranking_df: pd.DataFrame, k_list=(10, 20, 50), real_col="real
 
 
 # ─────────────────────────────────────────────────────────────
-# 4. Modelos
+# 4. Models
 # ─────────────────────────────────────────────────────────────
 
 def train_baseline(X_train_sc, y_train):
@@ -235,7 +258,7 @@ def ensemble_predict_proba(y_prob_a, y_prob_b):
 
 
 # ─────────────────────────────────────────────────────────────
-# 5. Ranking clínico
+# 5. Clinical ranking
 # ─────────────────────────────────────────────────────────────
 
 def build_ranking(X_test_raw: pd.DataFrame, y_prob, y_pred, y_test) -> pd.DataFrame:
@@ -251,7 +274,7 @@ def build_ranking(X_test_raw: pd.DataFrame, y_prob, y_pred, y_test) -> pd.DataFr
     ranking_df["prob_abnormal"] = y_prob[:, ABNORMAL_CODE].round(3)
     ranking_df["priority_rank"] = ranking_df["prob_abnormal"].rank(ascending=False).astype(int)
 
-    # Columnas legibles adicionales, útiles para revisar el ranking
+    # Extra human-readable columns, useful for reviewing the ranking
     for col in ["Medical Condition", "Admission Type", "Gender"]:
         if col in ranking_df.columns:
             ranking_df[f"{col}_label"] = ranking_df[col].map(LABEL_ENCODING_MAPS.get(col, {}))
@@ -260,7 +283,7 @@ def build_ranking(X_test_raw: pd.DataFrame, y_prob, y_pred, y_test) -> pd.DataFr
 
 
 # ─────────────────────────────────────────────────────────────
-# 6. Análisis de errores
+# 6. Error analysis
 # ─────────────────────────────────────────────────────────────
 
 def error_analysis(X_test_raw: pd.DataFrame, y_test, y_pred) -> dict:
@@ -275,7 +298,7 @@ def error_analysis(X_test_raw: pd.DataFrame, y_test, y_pred) -> dict:
     error_pairs = pd.crosstab(
         X_errors["y_real"].map(label_map),
         X_errors["y_pred"].map(label_map),
-        rownames=["Real"], colnames=["Predicho"],
+        rownames=["Actual"], colnames=["Predicted"],
     )
     critical_errors = X_errors[(X_errors["y_real"] == ABNORMAL_CODE) & (X_errors["y_pred"] == 0)]
 
@@ -289,7 +312,7 @@ def error_analysis(X_test_raw: pd.DataFrame, y_test, y_pred) -> dict:
 
 
 # ─────────────────────────────────────────────────────────────
-# 7. Pipeline completo
+# 7. Full pipeline
 # ─────────────────────────────────────────────────────────────
 
 def run_full_pipeline(df_clean: pd.DataFrame, selected_models: list, features: list = None) -> dict:
@@ -362,47 +385,28 @@ def run_full_pipeline(df_clean: pd.DataFrame, selected_models: list, features: l
 
 
 # ─────────────────────────────────────────────────────────────
-# 8. Sección de Streamlit (llamada desde app.py, sin argumentos)
+# 8. Streamlit section (called from app.py, no arguments)
 # ─────────────────────────────────────────────────────────────
 
 def run_care_prioritization_section():
-    """Sección completa 'Motor de Priorización Clínica'. Pide sus
-    propios 2 archivos (dataset procesado + clusters PCA) y entrena
-    Baseline / LR / RF / CatBoost / Ensemble sobre Test Results."""
-
-    st.markdown("##### 1. Cargar datos para el modelo")
-    st.caption(
-        "Sube el dataset procesado (equivalente a `healtcare_processedv2.csv`) "
-        "y el archivo con los clusters de PCA (equivalente a `healthcare_pca_clusters.csv`, "
-        "con columna `cluster`)."
-    )
-    col_up1, col_up2 = st.columns(2)
-    with col_up1:
-        df_file = st.file_uploader("Dataset procesado (CSV)", type=["csv"], key="prioritization_df_upload")
-    with col_up2:
-        clusters_file = st.file_uploader("Clusters PCA (CSV)", type=["csv"], key="prioritization_clusters_upload")
-
-    if df_file is None or clusters_file is None:
-        st.info("⬅️ Sube ambos archivos para continuar.")
-        return
 
     try:
-        df_model, load_meta = load_and_merge_datasets(df_file, clusters_file)
+        df_model, load_meta = load_and_merge_datasets()
     except Exception as e:
-        st.error(f"Error al cargar/unir los archivos: {e}")
+        st.error(f"Error loading/merging the files: {e}")
         return
 
     c1, c2 = st.columns(2)
-    c1.metric("Filas totales (dataset procesado)", f"{load_meta['n_total_rows']:,}")
-    c2.metric("Filas con cluster asignado", f"{load_meta['n_with_cluster']:,}")
-    st.caption(f"Distribución de Cluster_Biz: {load_meta['cluster_counts']}")
+    c1.metric("Total Rows (processed dataset)", f"{load_meta['n_total_rows']:,}")
+    c2.metric("Rows with Cluster Assigned", f"{load_meta['n_with_cluster']:,}")
+    st.caption(f"Cluster_Biz distribution: {load_meta['cluster_counts']}")
 
-    with st.expander("Vista previa de los datos alineados"):
+    with st.expander("Preview of the aligned data"):
         preview_cols = [c for c in FEATURES + [TARGET] if c in df_model.columns]
         st.dataframe(df_model[preview_cols].head(10), width='stretch')
 
     st.divider()
-    st.markdown("##### 2. Configuración del modelo")
+    st.markdown("##### 2. Model Configuration")
     col1, col2 = st.columns(2)
     with col1:
         selected_features = st.multiselect(
@@ -412,46 +416,46 @@ def run_care_prioritization_section():
         )
     with col2:
         selected_models = st.multiselect(
-            "Modelos a entrenar:", options=MODEL_OPTIONS, default=MODEL_OPTIONS,
+            "Models to Train:", options=MODEL_OPTIONS, default=MODEL_OPTIONS,
             key="prioritization_models",
         )
 
-    train_clicked = st.button("🚀 Entrenar modelos", type="primary", key="prioritization_train_btn")
+    train_clicked = st.button("🚀 Train Models", type="primary", key="prioritization_train_btn")
 
     if train_clicked:
         if not selected_features or not selected_models:
-            st.warning("Selecciona al menos una feature y un modelo.")
+            st.warning("Select at least one feature and one model.")
         else:
-            with st.spinner("Entrenando modelos de priorización clínica..."):
+            with st.spinner("Training clinical prioritization models..."):
                 try:
                     results = run_full_pipeline(df_model, selected_models, selected_features)
                     st.session_state["prioritization_results"] = results
                 except Exception as e:
-                    st.error(f"Error durante el entrenamiento: {e}")
+                    st.error(f"Error during training: {e}")
 
     results = st.session_state.get("prioritization_results")
     if results is None:
-        st.info("Configura las opciones y presiona **Entrenar modelos** para ver resultados.")
+        st.info("Configure the options and click **Train Models** to see results.")
         return
 
     meta = results["split_meta"]
     c1, c2, c3 = st.columns(3)
-    c1.metric("Filas de entrenamiento", meta["n_train"])
-    c2.metric("Filas de test", meta["n_test"])
-    c3.metric("Estrategia de split", meta["strategy"])
+    c1.metric("Training Rows", meta["n_train"])
+    c2.metric("Test Rows", meta["n_test"])
+    c3.metric("Split Strategy", meta["strategy"])
 
     st.divider()
-    st.markdown("##### Comparación de modelos")
+    st.markdown("##### Model Comparison")
     rows = [
-        {"Modelo": name, "Accuracy": round(m["accuracy"], 4),
-         "F1 Macro": round(m["f1_macro"], 4), "Costo Asimétrico": round(m["asymmetric_cost"], 4)}
+        {"Model": name, "Accuracy": round(m["accuracy"], 4),
+         "F1 Macro": round(m["f1_macro"], 4), "Asymmetric Cost": round(m["asymmetric_cost"], 4)}
         for name, m in results["metrics"].items()
     ]
     metrics_df = pd.DataFrame(rows).sort_values("F1 Macro", ascending=False)
     st.dataframe(metrics_df, width='stretch', hide_index=True)
 
     model_for_detail = st.selectbox(
-        "Ver detalle de un modelo:", options=list(results["metrics"].keys()), key="prioritization_detail_model"
+        "View detail for a model:", options=list(results["metrics"].keys()), key="prioritization_detail_model"
     )
     detail = results["metrics"][model_for_detail]
 
@@ -460,31 +464,31 @@ def run_care_prioritization_section():
         st.markdown(f"###### Classification report — {model_for_detail}")
         st.code(detail["classification_report"])
     with col_b:
-        st.markdown(f"###### Matriz de confusión — {model_for_detail}")
+        st.markdown(f"###### Confusion Matrix — {model_for_detail}")
         labels = [LABEL_ENCODING_MAPS[TARGET][k] for k in sorted(LABEL_ENCODING_MAPS[TARGET])]
         fig, ax = plt.subplots(figsize=(5, 4))
         sns.heatmap(detail["confusion_matrix"], annot=True, fmt="d", cmap="Blues",
                     xticklabels=labels, yticklabels=labels, ax=ax)
-        ax.set_xlabel("Predicción")
-        ax.set_ylabel("Real")
+        ax.set_xlabel("Predicted")
+        ax.set_ylabel("Actual")
         fig.tight_layout()
         st.pyplot(fig, width='stretch')
         plt.close(fig)
 
     if "feature_importance" in results:
         st.divider()
-        st.markdown("##### Importancia de features (Random Forest)")
+        st.markdown("##### Feature Importance (Random Forest)")
         fi = results["feature_importance"]
         fig, ax = plt.subplots(figsize=(8, 5))
         fi.sort_values().plot(kind="barh", ax=ax, color="#5da5da")
-        ax.set_xlabel("Importancia (Gini)")
+        ax.set_xlabel("Importance (Gini)")
         fig.tight_layout()
         st.pyplot(fig, width='stretch')
         plt.close(fig)
 
     if "ranking" in results:
         st.divider()
-        st.markdown("##### 🚨 Ranking de prioridad clínica")
+        st.markdown("##### 🚨 Clinical Priority Ranking")
         ranking_df = results["ranking"]
         display_cols = ["priority_rank"] + [c for c in ranking_df.columns if c != "priority_rank"]
         st.dataframe(ranking_df[display_cols].head(20), width='stretch', hide_index=True)
@@ -503,7 +507,7 @@ def run_care_prioritization_section():
                 fig, ax = plt.subplots(figsize=(6, 4))
                 ax.bar([f"@{k}" for k in precisions], list(precisions.values()), color="#f17c67", edgecolor="black")
                 freq_base = (ranking_df["real_class"] == "Abnormal").mean()
-                ax.axhline(freq_base, color="#5da5da", linestyle="--", label=f"Frecuencia base ({freq_base:.3f})")
+                ax.axhline(freq_base, color="#5da5da", linestyle="--", label=f"Base rate ({freq_base:.3f})")
                 ax.set_ylim(0, 1.05)
                 ax.set_ylabel("Precision")
                 ax.legend()
@@ -512,17 +516,17 @@ def run_care_prioritization_section():
                 plt.close(fig)
 
         csv_bytes = ranking_df.to_csv(index=False).encode("utf-8")
-        st.download_button("⬇️ Descargar ranking completo (CSV)", csv_bytes, file_name="ranking_prioridad_clinica.csv")
+        st.download_button("⬇️ Download full ranking (CSV)", csv_bytes, file_name="clinical_priority_ranking.csv")
 
     if "error_analysis" in results:
         st.divider()
-        st.markdown("##### 🔎 Análisis de errores")
+        st.markdown("##### 🔎 Error Analysis")
         ea = results["error_analysis"]
-        st.write(f"Total errores: **{ea['n_errors']} / {ea['n_total']}** ({ea['error_rate']*100:.1f}%)")
+        st.write(f"Total errors: **{ea['n_errors']} / {ea['n_total']}** ({ea['error_rate']*100:.1f}%)")
         st.dataframe(ea["error_pairs"], width='stretch')
 
         if len(ea["critical_errors"]) > 0:
-            st.warning(f"⚠️ Errores críticos (Abnormal → Normal): {len(ea['critical_errors'])}")
+            st.warning(f"⚠️ Critical errors (Abnormal → Normal): {len(ea['critical_errors'])}")
             st.dataframe(ea["critical_errors"], width='stretch')
         else:
-            st.success("Sin errores críticos (Abnormal → Normal) en este run.")
+            st.success("No critical errors (Abnormal → Normal) in this run.")
