@@ -19,7 +19,7 @@ It is built in five sequential stages:
 | 2. PCA / Clustering | Reduces a 33-feature patient matrix to 14–15 principal components; K-Means and DBSCAN segment patients | `data/processed/healthcare_pca_clusters.csv`, `artifacts/models/` |
 | 3. Ranking Engine | Ensemble of Random Forest + CatBoost scores admissions by predicted probability of an Abnormal test result | ranked priority queue (CSV) |
 | 4. Graph Analytics | Bipartite condition↔medication graph, edges filtered by statistical significance (lift ≥ 1.05) | `artifacts/graph/clinical_graph.gexf` |
-| 5. Dashboard | Streamlit app exposing EDA, PCA, Clustering, Priorization, and the interactive Clinical Graph | live app (see link below) |
+| 5. Dashboard | Streamlit app exposing EDA, PCA, Clustering, Priorization, and the interactive Clinical Graph | **[Live Dashboard](https://big-data-final-proyect-2025-01-n4jxjkldy3up8a6wzmkpyk.streamlit.app/)** |
 
 ## Repository Structure
 
@@ -59,10 +59,12 @@ pip install -r requirements.txt
 
 See [`RUNBOOK.md`](./RUNBOOK.md) for the full, step-by-step, copy-pasteable sequence of commands to regenerate every artifact in this repository from the raw CSV. In short, notebooks must be run in this order:
 
-1. `notebooks/01_preprocessing.ipynb` — cleaning, feature engineering
-2. `notebooks/02_pca_clustering.ipynb` — PCA, K-Means, DBSCAN
-3. `notebooks/03_ranking_engine.ipynb` — baselines, ensemble ranking model
-4. `notebooks/04_graph_analytics.ipynb` — lift-filtered clinical graph
+1. `processing_and_cleaning_week_3.ipynb` — cleaning, feature engineering
+2. `02_build_tables.ipynb` — tables
+3. `week5_features and dimensinality_correcion.ipynb` — PCA
+4. `week7_clustering_validation.ipynb` — K-Means, DBSCAN
+5. `week10_motor_priorizacion_cuidado_clinico_v2.ipynb` — baselines, ensemble ranking model
+6. `weekf13_grapt.ipynb` — lift-filtered clinical graph
 
 > Update the file names above to match your actual `notebooks/` folder if they differ.
 
@@ -75,6 +77,7 @@ The clinical graph and other analysis views are available as a live Streamlit ap
 To run it locally instead:
 
 ```bash
+cd project
 cd src
 streamlit run app.py
 ```
