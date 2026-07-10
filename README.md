@@ -37,7 +37,9 @@ It is built in five sequential stages:
 │   ├── models/            # Trained models (K-Means)
 │   └── graph/             # Exported graph files (clinical_graph.gexf)
 ├── reports/               # Final technical report and supporting documents
+├── RUNBOOK.md             
 └── README.md
+
 ```
 
 ## Setup
