@@ -66,7 +66,6 @@ See [`RUNBOOK.md`](./RUNBOOK.md) for the full, step-by-step, copy-pasteable sequ
 5. `week10_motor_priorizacion_cuidado_clinico_v2.ipynb` — baselines, ensemble ranking model
 6. `weekf13_grapt.ipynb` — lift-filtered clinical graph
 
-> Update the file names above to match your actual `notebooks/` folder if they differ.
 
 ## Interactive Dashboard
 
@@ -90,7 +89,7 @@ streamlit run app.py
 - **Ranking Engine:** The Random Forest + CatBoost ensemble reached Precision@10 = 0.600, tripling the random-ranking baseline (0.200).
 - **Graph Analytics:** Filtering the condition–medication graph by statistical significance (lift ≥ 1.05) reduced density from 0.55 to 0.20, and produced a PageRank ranking meaningfully different from raw popularity (Spearman ρ = 0.38 vs. 0.97 on the unfiltered graph).
 
-Full methodology, evaluation protocol, limitations, and the monitoring/operationalization plan are documented in [`reports/`](./reports).
+Full methodology, evaluation protocol, limitations, and the monitoring/operationalization plan are documented in [`reports/`](./project/reports).
 
 ## Team
 
