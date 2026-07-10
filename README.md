@@ -5,6 +5,7 @@
 Big Data final project: an end-to-end pipeline over a synthetic healthcare dataset (Kaggle, 55,500 admission records), covering preprocessing, dimensionality reduction, patient clustering, a predictive ranking engine, and graph-based structural analysis, served through an interactive Streamlit dashboard.
 
 **Course:** Big Data — Universidad Peruana de Ciencias Aplicadas
+
 **Section:** 18519
 
 ## Project Overview
@@ -16,7 +17,7 @@ It is built in five sequential stages:
 | Stage | What it does | Key output |
 |---|---|---|
 | 1. Preprocessing | Loads raw data, deduplicates, engineers features (`Cost_Per_Day`, label decoding) | `data/interim/healtcare_processedv2.csv` |
-| 2. PCA / Clustering | Reduces a 33-feature patient matrix to 14–15 principal components; K-Means and DBSCAN segment patients | `data/processed/healthcare_pca_clusters.csv`, `artifacts/models/` |
+| 2. PCA / Clustering | Reduces a 33-feature patient matrix to 14–15 principal components; K-Means and DBSCAN segment patients | `data/processed/healthcare_pca_clusters.csv`, `artifacts/models/kmeans_model_final.pkl` |
 | 3. Ranking Engine | Ensemble of Random Forest + CatBoost scores admissions by predicted probability of an Abnormal test result | ranked priority queue (CSV) |
 | 4. Graph Analytics | Bipartite condition↔medication graph, edges filtered by statistical significance (lift ≥ 1.05) | `artifacts/graph/clinical_graph.gexf` |
 | 5. Dashboard | Streamlit app exposing EDA, PCA, Clustering, Priorization, and the interactive Clinical Graph | **[Live Dashboard](https://big-data-final-proyect-2025-01-n4jxjkldy3up8a6wzmkpyk.streamlit.app/)** |
