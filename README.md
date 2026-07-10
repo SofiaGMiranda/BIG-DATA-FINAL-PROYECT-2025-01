@@ -61,7 +61,7 @@ pip install -r requirements.txt
 
 ## Reproducing the Pipeline
 
-See [`RUNBOOK.md`](./RUNBOOK.md) for the full, step-by-step, copy-pasteable sequence of commands to regenerate every artifact in this repository from the raw CSV. In short, notebooks must be run in this order:
+See [`RUNBOOK.md`](RUNBOOK.md) for the full, step-by-step, copy-pasteable sequence of commands to regenerate every artifact in this repository from the raw CSV. In short, notebooks must be run in this order:
 
 1. `processing_and_cleaning_week_3.ipynb` — cleaning, feature engineering
 2. `02_build_tables.ipynb` — tables
