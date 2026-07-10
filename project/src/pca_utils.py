@@ -173,10 +173,11 @@ def plot_variance_explained(pca_result):
 
 def show_components_table(pca_result):
     st.markdown("##### Varianza explicada por componente")
+    n = pca_result['num_components']
     tabla = pd.DataFrame({
-        'Componente': [f'PC_{i+1}' for i in range(len(pca_result['explained_variance_ratio']))],
-        'Varianza explicada (%)': (pca_result['explained_variance_ratio'] * 100).round(2),
-        'Varianza acumulada (%)': (pca_result['cumulative_variance'] * 100).round(2),
+        'Componente': [f'PC_{i+1}' for i in range(n)],
+        'Varianza explicada (%)': (pca_result['explained_variance_ratio'][:n] * 100).round(2),
+        'Varianza acumulada (%)': (pca_result['cumulative_variance'][:n] * 100).round(2),
     })
     st.dataframe(tabla, width='stretch')
 

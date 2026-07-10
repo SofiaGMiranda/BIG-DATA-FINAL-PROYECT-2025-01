@@ -1,0 +1,200 @@
+<?xml version='1.0' encoding='utf-8'?>
+<gexf xmlns="http://www.gexf.net/1.2draft" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.gexf.net/1.2draft http://www.gexf.net/1.2draft/gexf.xsd" version="1.2">
+  <meta lastmodifieddate="2026-07-09">
+    <creator>NetworkX 3.6.1</creator>
+  </meta>
+  <graph defaultedgetype="undirected" mode="static" name="">
+    <attributes mode="static" class="edge">
+      <attribute id="3" title="lift" type="double" />
+      <attribute id="4" title="n_patients" type="long" />
+      <attribute id="5" title="prop_abnormal" type="double" />
+      <attribute id="6" title="avg_cost" type="double" />
+      <attribute id="7" title="avg_age" type="double" />
+    </attributes>
+    <attributes mode="static" class="node">
+      <attribute id="0" title="node_type" type="string" />
+      <attribute id="1" title="n_patients" type="long" />
+      <attribute id="2" title="prop_abnormal" type="float" />
+    </attributes>
+    <nodes>
+      <node id="Cancer" label="Cancer">
+        <attvalues>
+          <attvalue for="0" value="condition" />
+          <attvalue for="1" value="203" />
+          <attvalue for="2" value="0.34" />
+        </attvalues>
+      </node>
+      <node id="Obesity" label="Obesity">
+        <attvalues>
+          <attvalue for="0" value="condition" />
+          <attvalue for="1" value="195" />
+          <attvalue for="2" value="0.364" />
+        </attvalues>
+      </node>
+      <node id="Diabetes" label="Diabetes">
+        <attvalues>
+          <attvalue for="0" value="condition" />
+          <attvalue for="1" value="199" />
+          <attvalue for="2" value="0.322" />
+        </attvalues>
+      </node>
+      <node id="Asthma" label="Asthma">
+        <attvalues>
+          <attvalue for="0" value="condition" />
+          <attvalue for="1" value="191" />
+          <attvalue for="2" value="0.335" />
+        </attvalues>
+      </node>
+      <node id="Hypertension" label="Hypertension">
+        <attvalues>
+          <attvalue for="0" value="condition" />
+          <attvalue for="1" value="190" />
+          <attvalue for="2" value="0.332" />
+        </attvalues>
+      </node>
+      <node id="Arthritis" label="Arthritis">
+        <attvalues>
+          <attvalue for="0" value="condition" />
+          <attvalue for="1" value="218" />
+          <attvalue for="2" value="0.275" />
+        </attvalues>
+      </node>
+      <node id="Paracetamol" label="Paracetamol">
+        <attvalues>
+          <attvalue for="0" value="medication" />
+          <attvalue for="1" value="243" />
+          <attvalue for="2" value="0.346" />
+        </attvalues>
+      </node>
+      <node id="Ibuprofen" label="Ibuprofen">
+        <attvalues>
+          <attvalue for="0" value="medication" />
+          <attvalue for="1" value="251" />
+          <attvalue for="2" value="0.283" />
+        </attvalues>
+      </node>
+      <node id="Aspirin" label="Aspirin">
+        <attvalues>
+          <attvalue for="0" value="medication" />
+          <attvalue for="1" value="211" />
+          <attvalue for="2" value="0.336" />
+        </attvalues>
+      </node>
+      <node id="Penicillin" label="Penicillin">
+        <attvalues>
+          <attvalue for="0" value="medication" />
+          <attvalue for="1" value="256" />
+          <attvalue for="2" value="0.344" />
+        </attvalues>
+      </node>
+      <node id="Lipitor" label="Lipitor">
+        <attvalues>
+          <attvalue for="0" value="medication" />
+          <attvalue for="1" value="235" />
+          <attvalue for="2" value="0.328" />
+        </attvalues>
+      </node>
+    </nodes>
+    <edges>
+      <edge source="Cancer" target="Lipitor" id="0" weight="61.99">
+        <attvalues>
+          <attvalue for="3" value="1.228" />
+          <attvalue for="4" value="49" />
+          <attvalue for="5" value="0.265" />
+          <attvalue for="6" value="4446.55" />
+          <attvalue for="7" value="50.5" />
+        </attvalues>
+      </edge>
+      <edge source="Cancer" target="Paracetamol" id="1" weight="62.98">
+        <attvalues>
+          <attvalue for="3" value="1.14" />
+          <attvalue for="4" value="47" />
+          <attvalue for="5" value="0.34" />
+          <attvalue for="6" value="2624.36" />
+          <attvalue for="7" value="51.0" />
+        </attvalues>
+      </edge>
+      <edge source="Obesity" target="Aspirin" id="2" weight="66.98">
+        <attvalues>
+          <attvalue for="3" value="1.424" />
+          <attvalue for="4" value="49" />
+          <attvalue for="5" value="0.367" />
+          <attvalue for="6" value="3300.38" />
+          <attvalue for="7" value="53.0" />
+        </attvalues>
+      </edge>
+      <edge source="Diabetes" target="Lipitor" id="3" weight="56.99">
+        <attvalues>
+          <attvalue for="3" value="1.074" />
+          <attvalue for="4" value="42" />
+          <attvalue for="5" value="0.357" />
+          <attvalue for="6" value="2711.36" />
+          <attvalue for="7" value="54.9" />
+        </attvalues>
+      </edge>
+      <edge source="Diabetes" target="Penicillin" id="4" weight="62.01">
+        <attvalues>
+          <attvalue for="3" value="1.056" />
+          <attvalue for="4" value="45" />
+          <attvalue for="5" value="0.378" />
+          <attvalue for="6" value="3892.57" />
+          <attvalue for="7" value="47.0" />
+        </attvalues>
+      </edge>
+      <edge source="Asthma" target="Aspirin" id="5" weight="50.99">
+        <attvalues>
+          <attvalue for="3" value="1.098" />
+          <attvalue for="4" value="37" />
+          <attvalue for="5" value="0.378" />
+          <attvalue for="6" value="2627.15" />
+          <attvalue for="7" value="49.5" />
+        </attvalues>
+      </edge>
+      <edge source="Asthma" target="Ibuprofen" id="6" weight="71.97">
+        <attvalues>
+          <attvalue for="3" value="1.322" />
+          <attvalue for="4" value="53" />
+          <attvalue for="5" value="0.358" />
+          <attvalue for="6" value="2861.57" />
+          <attvalue for="7" value="51.9" />
+        </attvalues>
+      </edge>
+      <edge source="Hypertension" target="Ibuprofen" id="7" weight="50.99">
+        <attvalues>
+          <attvalue for="3" value="1.053" />
+          <attvalue for="4" value="42" />
+          <attvalue for="5" value="0.214" />
+          <attvalue for="6" value="3744.54" />
+          <attvalue for="7" value="52.2" />
+        </attvalues>
+      </edge>
+      <edge source="Hypertension" target="Lipitor" id="8" weight="57.0">
+        <attvalues>
+          <attvalue for="3" value="1.071" />
+          <attvalue for="4" value="40" />
+          <attvalue for="5" value="0.425" />
+          <attvalue for="6" value="4613.99" />
+          <attvalue for="7" value="52.4" />
+        </attvalues>
+      </edge>
+      <edge source="Arthritis" target="Paracetamol" id="9" weight="69.0">
+        <attvalues>
+          <attvalue for="3" value="1.151" />
+          <attvalue for="4" value="51" />
+          <attvalue for="5" value="0.353" />
+          <attvalue for="6" value="2858.44" />
+          <attvalue for="7" value="56.4" />
+        </attvalues>
+      </edge>
+      <edge source="Arthritis" target="Penicillin" id="10" weight="69.01">
+        <attvalues>
+          <attvalue for="3" value="1.157" />
+          <attvalue for="4" value="54" />
+          <attvalue for="5" value="0.278" />
+          <attvalue for="6" value="3253.1" />
+          <attvalue for="7" value="48.4" />
+        </attvalues>
+      </edge>
+    </edges>
+  </graph>
+</gexf>
