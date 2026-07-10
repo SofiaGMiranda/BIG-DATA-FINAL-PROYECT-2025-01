@@ -51,6 +51,7 @@ cd BIG-DATA-FINAL-PROYECT-2025-01
 python -m venv venv
 venv\Scripts\activate        # Windows
 # source venv/bin/activate   # macOS/Linux
+cd project/src
 
 # 3. Install dependencies
 pip install -r requirements.txt
