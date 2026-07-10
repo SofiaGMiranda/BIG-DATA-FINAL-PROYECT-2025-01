@@ -20,7 +20,7 @@ It is built in five sequential stages:
 | 2. PCA / Clustering | Reduces a 33-feature patient matrix to 14–15 principal components; K-Means and DBSCAN segment patients | `data/processed/healthcare_pca_clusters.csv`, `artifacts/models/kmeans_model_final.pkl` |
 | 3. Ranking Engine | Ensemble of Random Forest + CatBoost scores admissions by predicted probability of an Abnormal test result | ranked priority queue (CSV) |
 | 4. Graph Analytics | Bipartite condition↔medication graph, edges filtered by statistical significance (lift ≥ 1.05) | `artifacts/graph/clinical_graph.gexf` |
-| 5. Dashboard | Streamlit app exposing EDA, PCA, Clustering, Priorization, and the interactive Clinical Graph | **[Live Dashboard](https://big-data-final-proyect-2025-01-n4jxjkldy3up8a6wzmkpyk.streamlit.app/)** |
+| 5. Dashboard | Streamlit app exposing EDA, PCA, Clustering, Priorization, and the interactive Clinical Graph | **[Live Dashboard](https://big-data-final-proyect-2025-01clinal-data.streamlit.app/)** |
 
 ## Repository Structure
 
@@ -32,11 +32,11 @@ It is built in five sequential stages:
 │   └── processed/         # Final modeling-ready data (PCA clusters, etc.)
 ├── notebooks/             # Analysis notebooks, one per pipeline stage
 ├── src/                   # Reusable Python modules (data_utils, graph_utils, clustering_utils, etc.)
+│   └── requirements.txt   # Python dependencies
 ├── artifacts/
 │   ├── models/            # Trained models (K-Means)
 │   └── graph/             # Exported graph files (clinical_graph.gexf)
 ├── reports/               # Final technical report and supporting documents
-├── requirements.txt       # Python dependencies
 └── README.md
 ```
 
@@ -72,7 +72,7 @@ See [`RUNBOOK.md`](./RUNBOOK.md) for the full, step-by-step, copy-pasteable sequ
 
 The clinical graph and other analysis views are available as a live Streamlit app:
 
-🔗 **[Live Dashboard](https://big-data-final-proyect-2025-01-n4jxjkldy3up8a6wzmkpyk.streamlit.app/)**
+🔗 **[Live Dashboard](https://big-data-final-proyect-2025-01clinal-data.streamlit.app/)**
 
 To run it locally instead:
 
