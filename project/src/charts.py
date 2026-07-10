@@ -66,7 +66,7 @@ def plot_numerical(df, col):
     with col_info:
         st.markdown(f"##### Resumen — {col}")
         st.metric("Outliers (IQR)", f"{n_outliers:,}")
-        st.caption(f"Límites: {lim_inf:.1f} — {lim_sup:.1f}")
+        #st.caption(f"Límites: {lim_inf:.1f} — {lim_sup:.1f}")
 
         st.markdown("###### Estadísticas descriptivas")
         stats = df[col].describe().round(2).rename("Valor")

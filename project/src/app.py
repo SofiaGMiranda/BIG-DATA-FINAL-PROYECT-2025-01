@@ -6,6 +6,7 @@ from data_utils import process_data
 from charts import plot_categorical, plot_numerical
 from modeling_utils import run_care_prioritization_section
 from graph_utils import run_graph_section
+#from recommendations_utils import run_recommendations_section
 
 from pca_utils import (
     build_patient_feature_matrix,
@@ -31,7 +32,7 @@ st.caption("Healthcare data pipeline: data quality, PCA, clustering, clinical pr
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-RAW_DATA = BASE_DIR / "data" / "raw" / "healthcare_dataset.csv"
+RAW_DATA = BASE_DIR / "data" / "interim" / "healthcare_processed.csv"
 
 #uploaded_file = st.sidebar.file_uploader("Upload CSV", type=["csv"])
 
@@ -67,10 +68,10 @@ if "active_tab" not in st.session_state:
 
 st.session_state.active_tab = st.radio(
         "Navigation",
-        ["🔍 Diagnostics", "📈 EDA", "🧬 PCA", "🧩 Clustering", "🎯 Prioritization","🕸️ Graph"],
+        ["🔍 Diagnostics", "📈 EDA", "🧬 PCA", "🧩 Clustering", "🎯 Prioritization", "🕸️ Graph"],
         horizontal=True,
         label_visibility="collapsed",
-        index=["🔍 Diagnostics", "📈 EDA", "🧬 PCA", "🧩 Clustering", "🎯 Prioritization","🕸️ Graph"].index(st.session_state.active_tab),
+        index=["🔍 Diagnostics", "📈 EDA", "🧬 PCA", "🧩 Clustering", "🎯 Prioritization", "🕸️ Graph"].index(st.session_state.active_tab),
     )
 
 st.divider()
@@ -188,6 +189,7 @@ elif st.session_state.active_tab == "🎯 Prioritization":
 elif st.session_state.active_tab == "🕸️ Graph":
     st.subheader("Relationship Network Analysis")
     run_graph_section()
+
 
 #else:
     #st.info("⬅️ Upload a CSV file from the sidebar to start the audit.")
